@@ -11,9 +11,7 @@ import type { TranscriptUpdate } from "./sessionBehaviour";
 type ConnectionStatus = "idle" | "requesting session" | "connected" | "error";
 
 type EphemeralSessionResponse = {
-  client_secret?: {
-    value?: string;
-  };
+  value?: unknown;
 };
 
 type TranscriptLine = {
@@ -25,7 +23,7 @@ type TranscriptLine = {
 
 export function App() {
   const [status, setStatus] = useState<ConnectionStatus>("idle");
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [ephemeralKey, setEphemeralKey] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [realtimeEvents, setRealtimeEvents] = useState<RealtimeEventLogEntry[]>([]);
   const [transcriptLines, setTranscriptLines] = useState<TranscriptLine[]>([]);
@@ -43,7 +41,7 @@ export function App() {
   const connectToMaya = async () => {
     setStatus("requesting session");
     setErrorMessage(null);
-    setClientSecret(null);
+    setEphemeralKey(null);
     connectionRef.current?.disconnect();
     connectionRef.current = null;
 
@@ -63,15 +61,15 @@ export function App() {
         throw new Error(`Session request failed with status ${response.status}`);
       }
 
-      const payload = (await response.json()) as EphemeralSessionResponse;
-      const secret = payload.client_secret?.value;
-      if (!secret) {
-        throw new Error("Session response did not include a client secret.");
+      const responseJson = (await response.json()) as EphemeralSessionResponse;
+      if (typeof responseJson.value !== "string") {
+        throw new Error("Session response did not include an ephemeral key.");
       }
 
-      setClientSecret(secret);
+      const ephemeralKey = responseJson.value;
+      setEphemeralKey(ephemeralKey);
       connectionRef.current = await connectRealtimeSession({
-        clientSecret: secret,
+        ephemeralKey,
         remoteAudioElement: remoteAudioRef.current,
         onEvent: addRealtimeEvent,
         onTranscript: addTranscriptUpdate
@@ -88,7 +86,7 @@ export function App() {
   const disconnectFromMaya = () => {
     connectionRef.current?.disconnect();
     connectionRef.current = null;
-    setClientSecret(null);
+    setEphemeralKey(null);
     setErrorMessage(null);
     setStatus("idle");
   };
@@ -149,8 +147,8 @@ export function App() {
           <strong>{status}</strong>
         </div>
         <div className="status-row">
-          <span>Session secret</span>
-          <strong>{clientSecret ? "stored" : "none"}</strong>
+          <span>Ephemeral key</span>
+          <strong>{ephemeralKey ? "stored" : "none"}</strong>
         </div>
         {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
         <section className="transcript-panel" aria-label="Live transcript">

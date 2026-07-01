@@ -22,14 +22,14 @@ export type RealtimeConnection = {
 };
 
 type ConnectRealtimeOptions = {
-  clientSecret: string;
+  ephemeralKey: string;
   remoteAudioElement: HTMLAudioElement;
   onEvent: (event: RealtimeEventLogEntry) => void;
   onTranscript: (update: TranscriptUpdate) => void;
 };
 
 export async function connectRealtimeSession({
-  clientSecret,
+  ephemeralKey,
   remoteAudioElement,
   onEvent,
   onTranscript
@@ -60,7 +60,7 @@ export async function connectRealtimeSession({
       throw new Error("Realtime SDP offer did not include SDP text.");
     }
 
-    const answerSdp = await postSdpOffer(clientSecret, offer.sdp);
+    const answerSdp = await postSdpOffer(ephemeralKey, offer.sdp);
     await peerConnection.setRemoteDescription({
       type: "answer",
       sdp: answerSdp
@@ -158,12 +158,12 @@ function describeDataChannelError(event: Event): string {
   return "Data channel error";
 }
 
-async function postSdpOffer(clientSecret: string, offerSdp: string): Promise<string> {
+async function postSdpOffer(ephemeralKey: string, offerSdp: string): Promise<string> {
   const response = await fetch(OPENAI_REALTIME_WEBRTC_URL, {
     method: "POST",
     body: offerSdp,
     headers: {
-      Authorization: `Bearer ${clientSecret}`,
+      Authorization: `Bearer ${ephemeralKey}`,
       "Content-Type": "application/sdp"
     }
   });
