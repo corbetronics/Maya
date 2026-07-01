@@ -31,11 +31,11 @@ def test_maya_session_config_endpoint_returns_realtime_config() -> None:
     assert payload["model"] == "gpt-realtime-2"
     assert payload["audio"]["output"]["voice"] == "alloy"
     assert "voice" not in payload
-    assert "audio" in payload["modalities"]
+    assert "modalities" not in payload
+    assert "turn_detection" not in payload
+    assert "input_audio_transcription" not in payload
     assert "instructions" in payload
     assert "## Constitution" in payload["instructions"]
-    assert "turn_detection" in payload
-    assert "input_audio_transcription" in payload
 
 
 def test_maya_ephemeral_session_endpoint_returns_openai_response(monkeypatch) -> None:
@@ -64,6 +64,9 @@ def test_maya_ephemeral_session_endpoint_returns_openai_response(monkeypatch) ->
     assert captured["session_config"]["model"] == "gpt-realtime-2"
     assert captured["session_config"]["audio"]["output"]["voice"] == "alloy"
     assert "voice" not in captured["session_config"]
+    assert "modalities" not in captured["session_config"]
+    assert "turn_detection" not in captured["session_config"]
+    assert "input_audio_transcription" not in captured["session_config"]
     assert "## Constitution" in captured["session_config"]["instructions"]
 
 

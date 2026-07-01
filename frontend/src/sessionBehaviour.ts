@@ -30,8 +30,7 @@ export function attachSessionBehaviour(
           },
           input_audio_transcription: {
             model: "whisper-1"
-          },
-          modalities: ["audio", "text"]
+          }
         }
       })
     );

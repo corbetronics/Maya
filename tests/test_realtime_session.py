@@ -20,13 +20,13 @@ def test_session_config_instructions_include_mayas_constitution(tmp_path: Path) 
     assert constitution_text in config["instructions"]
 
 
-def test_session_config_modalities_include_audio() -> None:
-    """Confirm audio is enabled by default."""
+def test_session_config_does_not_serialize_modalities() -> None:
+    """Confirm client-secret session payload omits unsupported modalities."""
     maya = CharacterEngine().create_maya()
 
     config = build_session_config(maya)
 
-    assert "audio" in config["modalities"]
+    assert "modalities" not in config
 
 
 def test_session_config_voice_is_configurable() -> None:
@@ -61,3 +61,6 @@ def test_session_config_serializes_current_webrtc_shape() -> None:
     assert config["model"] == "gpt-realtime-2"
     assert config["audio"] == {"output": {"voice": "alloy"}}
     assert "voice" not in config
+    assert "modalities" not in config
+    assert "turn_detection" not in config
+    assert "input_audio_transcription" not in config

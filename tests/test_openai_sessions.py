@@ -62,7 +62,7 @@ def test_openai_session_client_posts_session_config(monkeypatch) -> None:
         "type": "realtime",
         "model": "gpt-realtime-2",
         "audio": {"output": {"voice": "alloy"}},
-        "modalities": ["audio", "text"],
+        "instructions": "Project Maya instructions",
     }
 
     response = OpenAISessionClient().create_ephemeral_session(session_config)
@@ -74,6 +74,7 @@ def test_openai_session_client_posts_session_config(monkeypatch) -> None:
     assert captured["headers"]["Content-type"] == "application/json"
     assert captured["headers"]["Openai-safety-identifier"] == "hashed-user-id"
     assert captured["body"] == {"session": session_config}
+    assert "modalities" not in captured["body"]["session"]
 
 
 def test_openai_session_client_uses_development_safety_identifier(monkeypatch) -> None:

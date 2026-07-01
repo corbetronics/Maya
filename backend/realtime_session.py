@@ -40,13 +40,10 @@ def build_session_config(
     return {
         "type": "realtime",
         "model": config.model,
-        "modalities": list(config.modalities),
         "instructions": prompt_bundle.system_prompt,
         "audio": {
             "output": {
                 "voice": config.voice,
             },
         },
-        "turn_detection": dict(config.turn_detection),
-        "input_audio_transcription": dict(config.input_audio_transcription),
     }
