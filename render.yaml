@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: project-maya
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_SAFETY_IDENTIFIER
+        sync: false

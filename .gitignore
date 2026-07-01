@@ -1,0 +1,13 @@
+.DS_Store
+.env
+.venv/
+.tools/
+__pycache__/
+*.py[cod]
+*.sqlite3
+.pytest_cache/
+.ruff_cache/
+node_modules/
+.pnpm-store/
+dist/
+coverage/

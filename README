@@ -1,1 +1,46 @@
-//holder
+# Project MAYA
+
+Project MAYA is a production-ready skeleton for a realtime AI podcast guest named Maya. The initial build includes a FastAPI backend, React TypeScript frontend, SQLite configuration, Render deployment files, and smoke tests.
+
+## Structure
+
+- `backend/` - FastAPI application and infrastructure.
+- `frontend/` - React, TypeScript, and Vite application.
+- `brain/` - Domain contracts for future conversation intelligence.
+- `docs/` - Architecture notes.
+- `tests/` - Smoke tests.
+
+## Backend
+
+```bash
+cd backend
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn backend.app.main:app --reload --app-dir ..
+```
+
+Health check:
+
+```bash
+curl http://localhost:8000/api/health
+```
+
+## Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Tests
+
+```bash
+pip install -r backend/requirements.txt httpx pytest
+pytest
+```
+
+## Deployment
+
+Render can deploy the backend from `render.yaml`. Set `OPENAI_API_KEY` in Render as a secret environment variable.
