@@ -1,7 +1,9 @@
 """OpenAI session client tests."""
 
 import json
+from io import BytesIO
 from typing import Any
+from urllib.error import HTTPError
 from urllib.request import Request
 
 import pytest
@@ -66,7 +68,7 @@ def test_openai_session_client_posts_session_config(monkeypatch) -> None:
     response = OpenAISessionClient().create_ephemeral_session(session_config)
 
     assert response == {"client_secret": {"value": "ephemeral-test-secret"}}
-    assert captured["url"] == "https://api.openai.com/v1/realtime/sessions"
+    assert captured["url"] == "https://api.openai.com/v1/realtime/client_secrets"
     assert captured["timeout"] == 10.0
     assert captured["headers"]["Authorization"] == "Bearer test-api-key"
     assert captured["headers"]["Content-type"] == "application/json"
@@ -106,3 +108,33 @@ def test_openai_session_client_requires_safety_identifier_outside_development(
 
     with pytest.raises(MissingOpenAISafetyIdentifierError):
         OpenAISessionClient().create_ephemeral_session({"type": "realtime"})
+
+
+def test_openai_session_client_logs_rejected_status_and_body_without_secrets(
+    monkeypatch,
+    caplog,
+) -> None:
+    """Confirm OpenAI HTTP rejections log only response status and body."""
+
+    def fake_urlopen(session_request: Request, timeout: float) -> FakeResponse:
+        _ = session_request
+        _ = timeout
+        raise HTTPError(
+            url="https://api.openai.com/v1/realtime/client_secrets",
+            code=404,
+            msg="Not Found",
+            hdrs=None,
+            fp=BytesIO(b'{"error":"missing route"}'),
+        )
+
+    monkeypatch.setenv("OPENAI_API_KEY", "secret-api-key")
+    monkeypatch.setenv("OPENAI_SAFETY_IDENTIFIER", "safe-user-id")
+    monkeypatch.setattr("backend.openai_sessions.request.urlopen", fake_urlopen)
+
+    with pytest.raises(HTTPError):
+        OpenAISessionClient().create_ephemeral_session({"type": "realtime"})
+
+    assert "status=404" in caplog.text
+    assert '{"error":"missing route"}' in caplog.text
+    assert "secret-api-key" not in caplog.text
+    assert "safe-user-id" not in caplog.text

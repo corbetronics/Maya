@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError
 
 from fastapi.testclient import TestClient
 
@@ -76,6 +77,38 @@ def test_maya_ephemeral_session_missing_api_key_returns_clear_500(monkeypatch) -
     assert response.status_code == 500
     assert response.json() == {
         "detail": "OPENAI_API_KEY is required to create a session.",
+    }
+
+
+def test_maya_ephemeral_session_openai_http_error_returns_safe_502(monkeypatch) -> None:
+    """Confirm OpenAI HTTP rejections become useful gateway errors."""
+
+    def fake_create_ephemeral_session(
+        self: OpenAISessionClient,
+        session_config: dict[str, Any],
+    ) -> dict[str, Any]:
+        _ = self
+        _ = session_config
+        raise HTTPError(
+            url="https://api.openai.com/v1/realtime/client_secrets",
+            code=404,
+            msg="Not Found",
+            hdrs=None,
+            fp=None,
+        )
+
+    monkeypatch.setattr(
+        OpenAISessionClient,
+        "create_ephemeral_session",
+        fake_create_ephemeral_session,
+    )
+    client = TestClient(create_app())
+
+    response = client.post("/maya/ephemeral-session")
+
+    assert response.status_code == 502
+    assert response.json() == {
+        "detail": "OpenAI rejected ephemeral session creation: 404",
     }
 
 

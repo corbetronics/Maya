@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,6 +49,11 @@ def create_app(frontend_dist: Path | None = None) -> FastAPI:
             return OpenAISessionClient().create_ephemeral_session(session_config)
         except (MissingOpenAIAPIKeyError, MissingOpenAISafetyIdentifierError) as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
+        except HTTPError as exc:
+            raise HTTPException(
+                status_code=502,
+                detail=f"OpenAI rejected ephemeral session creation: {exc.code}",
+            ) from exc
 
     mount_frontend(app, configured_frontend_dist)
     return app

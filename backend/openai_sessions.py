@@ -2,13 +2,16 @@
 
 from dataclasses import dataclass
 import json
+import logging
 import os
 from typing import Any
 from urllib import request
+from urllib.error import HTTPError
 
 
-OPENAI_REALTIME_SESSIONS_URL = "https://api.openai.com/v1/realtime/sessions"
+OPENAI_REALTIME_CLIENT_SECRETS_URL = "https://api.openai.com/v1/realtime/client_secrets"
 LOCAL_DEVELOPMENT_SAFETY_IDENTIFIER = "project-maya-local-development"
+logger = logging.getLogger(__name__)
 
 
 class MissingOpenAIAPIKeyError(RuntimeError):
@@ -23,7 +26,7 @@ class MissingOpenAISafetyIdentifierError(RuntimeError):
 class OpenAISessionClient:
     """Creates browser-safe ephemeral OpenAI Realtime sessions."""
 
-    sessions_url: str = OPENAI_REALTIME_SESSIONS_URL
+    sessions_url: str = OPENAI_REALTIME_CLIENT_SECRETS_URL
     timeout_seconds: float = 10.0
 
     def create_ephemeral_session(self, session_config: dict[str, Any]) -> dict[str, Any]:
@@ -44,9 +47,18 @@ class OpenAISessionClient:
             method="POST",
         )
 
-        with request.urlopen(session_request, timeout=self.timeout_seconds) as response:
-            response_body = response.read().decode("utf-8")
-            return json.loads(response_body)
+        try:
+            with request.urlopen(session_request, timeout=self.timeout_seconds) as response:
+                response_body = response.read().decode("utf-8")
+                return json.loads(response_body)
+        except HTTPError as exc:
+            response_body = exc.read().decode("utf-8", errors="replace")
+            logger.warning(
+                "OpenAI rejected ephemeral session creation: status=%s body=%s",
+                exc.code,
+                response_body,
+            )
+            raise
 
     def _safety_identifier(self) -> str:
         """Return the backend-only safety identifier for OpenAI session creation."""
