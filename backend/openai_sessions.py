@@ -35,7 +35,8 @@ class OpenAISessionClient:
         if not api_key:
             raise MissingOpenAIAPIKeyError("OPENAI_API_KEY is required to create a session.")
 
-        body = json.dumps({"session": session_config}).encode("utf-8")
+        payload = self._client_secret_payload(session_config)
+        body = json.dumps(payload).encode("utf-8")
         session_request = request.Request(
             self.sessions_url,
             data=body,
@@ -48,6 +49,10 @@ class OpenAISessionClient:
         )
 
         try:
+            logger.info(
+                "Creating OpenAI realtime client secret with session keys=%s",
+                sorted(payload["session"].keys()),
+            )
             with request.urlopen(session_request, timeout=self.timeout_seconds) as response:
                 response_body = response.read().decode("utf-8")
                 return json.loads(response_body)
@@ -59,6 +64,44 @@ class OpenAISessionClient:
                 response_body,
             )
             raise
+
+    def _client_secret_payload(self, session_config: dict[str, Any]) -> dict[str, Any]:
+        """Build the allowlisted OpenAI client-secret request payload."""
+        session: dict[str, Any] = {}
+
+        session_type = session_config.get("type")
+        if session_type is not None:
+            session["type"] = session_type
+
+        model = session_config.get("model")
+        if model is not None:
+            session["model"] = model
+
+        instructions = session_config.get("instructions")
+        if instructions is not None:
+            session["instructions"] = instructions
+
+        voice = self._voice_from_session_config(session_config)
+        if voice is not None:
+            session["audio"] = {
+                "output": {
+                    "voice": voice,
+                },
+            }
+
+        return {"session": session}
+
+    def _voice_from_session_config(self, session_config: dict[str, Any]) -> Any:
+        """Return the configured output voice from supported internal shapes."""
+        audio = session_config.get("audio")
+        if isinstance(audio, dict):
+            output = audio.get("output")
+            if isinstance(output, dict):
+                voice = output.get("voice")
+                if voice is not None:
+                    return voice
+
+        return session_config.get("voice")
 
     def _safety_identifier(self) -> str:
         """Return the backend-only safety identifier for OpenAI session creation."""

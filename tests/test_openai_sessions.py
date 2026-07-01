@@ -1,6 +1,7 @@
 """OpenAI session client tests."""
 
 import json
+import logging
 from io import BytesIO
 from typing import Any
 from urllib.error import HTTPError
@@ -63,6 +64,18 @@ def test_openai_session_client_posts_session_config(monkeypatch) -> None:
         "model": "gpt-realtime-2",
         "audio": {"output": {"voice": "alloy"}},
         "instructions": "Project Maya instructions",
+        "modalities": ["audio", "text"],
+        "turn_detection": {"type": "server_vad"},
+        "input_audio_transcription": {"model": "whisper-1"},
+        "internal_debug": None,
+    }
+    expected_payload = {
+        "session": {
+            "type": "realtime",
+            "model": "gpt-realtime-2",
+            "instructions": "Project Maya instructions",
+            "audio": {"output": {"voice": "alloy"}},
+        },
     }
 
     response = OpenAISessionClient().create_ephemeral_session(session_config)
@@ -73,8 +86,48 @@ def test_openai_session_client_posts_session_config(monkeypatch) -> None:
     assert captured["headers"]["Authorization"] == "Bearer test-api-key"
     assert captured["headers"]["Content-type"] == "application/json"
     assert captured["headers"]["Openai-safety-identifier"] == "hashed-user-id"
-    assert captured["body"] == {"session": session_config}
+    assert captured["body"] == expected_payload
+    assert set(captured["body"]["session"]) == {"type", "model", "instructions", "audio"}
     assert "modalities" not in captured["body"]["session"]
+    assert "turn_detection" not in captured["body"]["session"]
+    assert "input_audio_transcription" not in captured["body"]["session"]
+    assert "internal_debug" not in captured["body"]["session"]
+
+
+def test_openai_session_client_logs_only_safe_session_keys(monkeypatch, caplog) -> None:
+    """Confirm the request log includes only allowlisted session keys."""
+    captured: dict[str, Any] = {}
+    caplog.set_level(logging.INFO, logger="backend.openai_sessions")
+
+    def fake_urlopen(session_request: Request, timeout: float) -> FakeResponse:
+        _ = timeout
+        captured["body"] = json.loads((session_request.data or b"{}").decode("utf-8"))
+        return FakeResponse({"client_secret": {"value": "ephemeral-test-secret"}})
+
+    monkeypatch.setenv("OPENAI_API_KEY", "secret-api-key")
+    monkeypatch.setenv("OPENAI_SAFETY_IDENTIFIER", "safe-user-id")
+    monkeypatch.setattr("backend.openai_sessions.request.urlopen", fake_urlopen)
+
+    OpenAISessionClient().create_ephemeral_session(
+        {
+            "type": "realtime",
+            "model": "gpt-realtime-2",
+            "instructions": "Private instructions",
+            "audio": {"output": {"voice": "marin"}},
+            "modalities": ["audio", "text"],
+        }
+    )
+
+    assert captured["body"]["session"] == {
+        "type": "realtime",
+        "model": "gpt-realtime-2",
+        "instructions": "Private instructions",
+        "audio": {"output": {"voice": "marin"}},
+    }
+    assert "session keys=['audio', 'instructions', 'model', 'type']" in caplog.text
+    assert "Private instructions" not in caplog.text
+    assert "secret-api-key" not in caplog.text
+    assert "safe-user-id" not in caplog.text
 
 
 def test_openai_session_client_uses_development_safety_identifier(monkeypatch) -> None:
