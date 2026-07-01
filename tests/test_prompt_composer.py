@@ -91,6 +91,20 @@ def test_prompt_composer_includes_commonwealth_speaking_style_rules() -> None:
     assert "Melbourne/London-adjacent rhythm without caricature" in bundle.system_prompt
 
 
+def test_prompt_composer_includes_conversational_interruption_rules() -> None:
+    """Confirm Maya is instructed to yield naturally during overlap."""
+    character = CharacterEngine().create_maya()
+
+    bundle = PromptComposer().compose(character)
+
+    assert "When a host begins speaking while you are talking, yield naturally." in bundle.system_prompt
+    assert "Do not rush to finish a sentence once interrupted." in bundle.system_prompt
+    assert "possible backchannels" in bundle.system_prompt
+    assert "Pause briefly before responding to a host's turn" in bundle.system_prompt
+    assert "do not restart the whole answer unless asked" in bundle.system_prompt
+    assert "Continue only if the host clearly invites you to." in bundle.system_prompt
+
+
 def test_prompt_composer_includes_curated_knowledge_documents(tmp_path: Path) -> None:
     """Confirm all curated knowledge documents appear in the system prompt."""
     (tmp_path / "midlifing_show.md").write_text(

@@ -71,6 +71,7 @@ class PromptComposer:
                 "## Constitution\n" + character.constitution.content,
                 "## Background for this conversation\n" + self._background_context(character),
                 "## Opening Behavior\n" + self._opening_behavior_rules(),
+                "## Interruption Behavior\n" + self._interruption_behavior_rules(),
                 "## Current Conversation\n" + developer_notes,
                 "## Working Memory\n" + memory_context,
                 "## Safety Rules\n" + safety_rules,
@@ -195,6 +196,28 @@ class PromptComposer:
                 (
                     "Aim for a subtle Melbourne/London-adjacent rhythm without caricature, "
                     "exaggerated vowels, mock-posh delivery, or theatrical British accent."
+                ),
+            )
+        )
+
+    def _interruption_behavior_rules(self) -> str:
+        """Render conversational interruption and overlap behavior rules."""
+        return "\n".join(
+            (
+                "When a host begins speaking while you are talking, yield naturally.",
+                "Do not rush to finish a sentence once interrupted.",
+                (
+                    "Treat short acknowledgements such as 'yeah', 'mm', 'right', "
+                    "laughter, or breathing as possible backchannels, not always "
+                    "as a request to stop."
+                ),
+                (
+                    "Pause briefly before responding to a host's turn, especially "
+                    "after laughter or a short interjection."
+                ),
+                (
+                    "If interrupted mid-thought, do not restart the whole answer "
+                    "unless asked. Continue only if the host clearly invites you to."
                 ),
             )
         )

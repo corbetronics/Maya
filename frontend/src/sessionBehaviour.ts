@@ -26,7 +26,12 @@ export function attachSessionBehaviour(
         type: "session.update",
         session: {
           turn_detection: {
-            type: "server_vad"
+            type: "server_vad",
+            threshold: 0.65,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 750,
+            interrupt_response: true,
+            create_response: true
           },
           input_audio_transcription: {
             model: "whisper-1"

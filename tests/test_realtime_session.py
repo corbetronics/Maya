@@ -51,6 +51,20 @@ def test_session_config_does_not_require_api_key(monkeypatch) -> None:
     assert config["model"] == "gpt-realtime-2"
 
 
+def test_session_config_defaults_use_conversational_server_vad() -> None:
+    """Confirm internal VAD defaults support natural overlap without being too sensitive."""
+    turn_detection = RealtimeSessionConfig().turn_detection
+
+    assert turn_detection == {
+        "type": "server_vad",
+        "threshold": 0.65,
+        "prefix_padding_ms": 300,
+        "silence_duration_ms": 750,
+        "interrupt_response": True,
+        "create_response": True,
+    }
+
+
 def test_session_config_serializes_current_webrtc_shape() -> None:
     """Confirm session config matches the current Realtime WebRTC session shape."""
     maya = CharacterEngine().create_maya()

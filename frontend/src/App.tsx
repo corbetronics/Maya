@@ -138,6 +138,11 @@ export function App() {
             Disconnect
           </button>
         </div>
+        <p className="producer-note">
+          Interruption is tuned for natural overlap. If Maya is still cutting off too easily,
+          increase the VAD threshold or silence duration slightly; if she talks over hosts,
+          reduce those values slightly.
+        </p>
       </section>
 
       <aside className="status-panel" aria-label="System status">

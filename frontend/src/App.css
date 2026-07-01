@@ -135,6 +135,14 @@ h1 {
   gap: 12px;
 }
 
+.producer-note {
+  max-width: 72ch;
+  margin: -12px 0 0;
+  color: #6b5950;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .action-button {
   display: inline-flex;
   align-items: center;

@@ -17,9 +17,11 @@ class RealtimeSessionConfig:
     turn_detection: dict[str, Any] = field(
         default_factory=lambda: {
             "type": "server_vad",
-            "threshold": 0.5,
+            "threshold": 0.65,
             "prefix_padding_ms": 300,
-            "silence_duration_ms": 500,
+            "silence_duration_ms": 750,
+            "interrupt_response": True,
+            "create_response": True,
         }
     )
     input_audio_transcription: dict[str, Any] = field(
