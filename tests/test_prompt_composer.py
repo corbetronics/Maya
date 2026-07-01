@@ -10,6 +10,7 @@ from brain import (
     ConversationState,
     PromptComposer,
 )
+from brain.knowledge_loader import KnowledgeLoader
 
 
 def test_prompt_composer_includes_constitution_text_verbatim(tmp_path: Path) -> None:
@@ -88,3 +89,40 @@ def test_prompt_composer_includes_commonwealth_speaking_style_rules() -> None:
     assert "relaxed, intelligent, lightly dry delivery" in bundle.system_prompt
     assert "Do not mention or explain the accent unless asked." in bundle.system_prompt
     assert "Melbourne/London-adjacent rhythm without caricature" in bundle.system_prompt
+
+
+def test_prompt_composer_includes_curated_knowledge_documents(tmp_path: Path) -> None:
+    """Confirm all curated knowledge documents appear in the system prompt."""
+    (tmp_path / "midlifing_show.md").write_text(
+        "SHOW_MARKER: Midlifing show context.\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "simon.md").write_text(
+        "SIMON_MARKER: Simon context.\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "lee.md").write_text(
+        "LEE_MARKER: Lee context.\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "current_episode.md").write_text(
+        "EPISODE_MARKER: Current episode context.\n",
+        encoding="utf-8",
+    )
+    character = CharacterEngine(
+        knowledge_loader=KnowledgeLoader(knowledge_dir=tmp_path),
+    ).create_maya()
+
+    bundle = PromptComposer().compose(character)
+
+    assert "## Background for this conversation" in bundle.system_prompt
+    assert "SHOW_MARKER: Midlifing show context.\n" in bundle.system_prompt
+    assert "SIMON_MARKER: Simon context.\n" in bundle.system_prompt
+    assert "LEE_MARKER: Lee context.\n" in bundle.system_prompt
+    assert "EPISODE_MARKER: Current episode context.\n" in bundle.system_prompt
+    assert "These notes are background, not a script." in bundle.system_prompt
+    assert "Do not recite them." in bundle.system_prompt
+    assert "Do not claim to remember an episode unless the notes support it." in bundle.system_prompt
+    assert "Do not mention private briefing notes." in bundle.system_prompt
+    assert "Use knowledge only when it fits naturally." in bundle.system_prompt
+    assert "prioritise what they say in the live conversation" in bundle.system_prompt

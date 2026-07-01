@@ -8,6 +8,7 @@ from brain.curiosity import CuriosityEngine, CuriosityState
 from brain.emotion import ConversationEmotion
 from brain.humour import HUMOUR_STYLES, HumourStyle
 from brain.identity import CharacterIdentity, GuestIdentity, HostIdentity
+from brain.knowledge_loader import KnowledgeBundle, KnowledgeLoader
 from brain.memory import WorkingMemory
 from brain.models import BrainInput, BrainOutput
 from brain.reflection import ReflectionNote, ThinkingState
@@ -21,6 +22,7 @@ class MayaCharacter:
     identity: CharacterIdentity
     guest_identity: GuestIdentity
     constitution: ConstitutionDocument
+    knowledge: KnowledgeBundle
     host_identities: tuple[HostIdentity, ...]
     values: CharacterValues
     emotion: ConversationEmotion
@@ -38,6 +40,7 @@ class CharacterEngine:
     """Builds Maya's complete local character object from brain modules."""
 
     constitution_loader: ConstitutionLoader = field(default_factory=ConstitutionLoader)
+    knowledge_loader: KnowledgeLoader = field(default_factory=KnowledgeLoader)
 
     def create_maya(self) -> MayaCharacter:
         """Create a fresh Maya character graph with deterministic defaults."""
@@ -45,6 +48,7 @@ class CharacterEngine:
             identity=self._identity(),
             guest_identity=GuestIdentity(),
             constitution=self.constitution_loader.get_document(),
+            knowledge=self.knowledge_loader.load(),
             host_identities=(),
             values=self._values(),
             emotion=ConversationEmotion(),

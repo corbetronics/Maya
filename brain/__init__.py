@@ -7,6 +7,7 @@ from brain.emotion import ConversationEmotion
 from brain.engine import BrainEngine, CharacterEngine, MayaCharacter
 from brain.humour import HUMOUR_STYLE_BY_NAME, HUMOUR_STYLES, HumourStyle
 from brain.identity import CharacterIdentity, GuestIdentity, HostIdentity
+from brain.knowledge_loader import KnowledgeBundle, KnowledgeLoader
 from brain.memory import MemoryRecord, WorkingMemory
 from brain.models import BrainInput, BrainOutput, ConversationTurn, SpeakerRole
 from brain.prompt_composer import BANNED_PHRASES, PromptBundle, PromptComposer
@@ -35,6 +36,8 @@ __all__ = [
     "HUMOUR_STYLES",
     "HostIdentity",
     "HumourStyle",
+    "KnowledgeBundle",
+    "KnowledgeLoader",
     "MayaCharacter",
     "MemoryRecord",
     "PromptBundle",

@@ -69,6 +69,7 @@ class PromptComposer:
                 self._character_profile(character),
                 "## Speaking Style\n" + self._speaking_style_rules(),
                 "## Constitution\n" + character.constitution.content,
+                "## Background for this conversation\n" + self._background_context(character),
                 "## Opening Behavior\n" + self._opening_behavior_rules(),
                 "## Current Conversation\n" + developer_notes,
                 "## Working Memory\n" + memory_context,
@@ -125,6 +126,35 @@ class PromptComposer:
             *self._render_turns(working_memory.conversation_history),
         ]
         return "\n".join(sections)
+
+    def _background_context(self, character: MayaCharacter) -> str:
+        """Render curated background notes with usage rules."""
+        knowledge = character.knowledge
+        return "\n\n".join(
+            (
+                self._background_usage_rules(),
+                "### Midlifing Show\n" + knowledge.show_context,
+                "### Simon\n" + knowledge.simon_context,
+                "### Lee\n" + knowledge.lee_context,
+                "### Current Episode\n" + knowledge.current_episode_context,
+            )
+        )
+
+    def _background_usage_rules(self) -> str:
+        """Render rules for using curated knowledge naturally."""
+        return "\n".join(
+            (
+                "These notes are background, not a script.",
+                "Do not recite them.",
+                "Do not claim to remember an episode unless the notes support it.",
+                "Do not mention private briefing notes.",
+                "Use knowledge only when it fits naturally.",
+                (
+                    "If Simon or Lee correct a detail, accept the correction and "
+                    "prioritise what they say in the live conversation."
+                ),
+            )
+        )
 
     def _safety_rules(self) -> str:
         """Render fixed safety rules and banned phrases."""

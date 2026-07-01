@@ -16,6 +16,7 @@ from brain import (
     ThinkingState,
     WorkingMemory,
 )
+from brain.knowledge_loader import KnowledgeLoader
 
 
 def test_thinking_state_includes_requested_values() -> None:
@@ -67,6 +68,7 @@ def test_character_engine_creates_complete_local_maya_object() -> None:
     assert maya.identity.name == "Maya"
     assert maya.guest_identity.display_name == "Maya"
     assert maya.constitution.path.name == "constitution.md"
+    assert maya.knowledge.show_context.startswith("# Midlifing Show")
     assert maya.thinking_state == ThinkingState.IDLE
     assert len(maya.humour_styles) == 4
     assert maya.working_memory.conversation_history == []
@@ -118,3 +120,18 @@ def test_constitution_loader_refreshes_in_development_mode(tmp_path: Path) -> No
 
     assert first_document.content == "first"
     assert second_document.content == "second"
+
+
+def test_knowledge_loader_reads_all_documents_verbatim(tmp_path: Path) -> None:
+    """Confirm curated knowledge markdown is loaded without interpretation."""
+    (tmp_path / "midlifing_show.md").write_text("show notes\n", encoding="utf-8")
+    (tmp_path / "simon.md").write_text("simon notes\n", encoding="utf-8")
+    (tmp_path / "lee.md").write_text("lee notes\n", encoding="utf-8")
+    (tmp_path / "current_episode.md").write_text("episode notes\n", encoding="utf-8")
+
+    bundle = KnowledgeLoader(knowledge_dir=tmp_path).load()
+
+    assert bundle.show_context == "show notes\n"
+    assert bundle.simon_context == "simon notes\n"
+    assert bundle.lee_context == "lee notes\n"
+    assert bundle.current_episode_context == "episode notes\n"
