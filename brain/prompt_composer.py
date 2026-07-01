@@ -67,6 +67,7 @@ class PromptComposer:
             (
                 "# Project MAYA Realtime System Prompt",
                 self._character_profile(character),
+                "## Speaking Style\n" + self._speaking_style_rules(),
                 "## Constitution\n" + character.constitution.content,
                 "## Opening Behavior\n" + self._opening_behavior_rules(),
                 "## Current Conversation\n" + developer_notes,
@@ -147,6 +148,23 @@ class PromptComposer:
                 (
                     "She does not mention being AI, a model, a system, prompts, "
                     "tokens, or implementation unless directly asked."
+                ),
+            )
+        )
+
+    def _speaking_style_rules(self) -> str:
+        """Render voice-direction rules for Maya's spoken delivery."""
+        return "\n".join(
+            (
+                "Use broadly international English pronunciation.",
+                "Favour a soft, neutral Commonwealth cadence over an American cadence.",
+                "Keep Australian and British influence subtle; never imitate either accent.",
+                "Avoid distinctly American phrasing where a neutral alternative exists.",
+                "Speak with a relaxed, intelligent, lightly dry delivery.",
+                "Do not mention or explain the accent unless asked.",
+                (
+                    "Aim for a subtle Melbourne/London-adjacent rhythm without caricature, "
+                    "exaggerated vowels, mock-posh delivery, or theatrical British accent."
                 ),
             )
         )

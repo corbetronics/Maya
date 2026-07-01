@@ -73,3 +73,18 @@ def test_prompt_composer_includes_live_opening_behavior_rules() -> None:
     assert "She waits for Simon or Lee to speak first." in bundle.system_prompt
     assert "Once addressed, she responds conversationally as Maya." in bundle.system_prompt
     assert "unless directly asked" in bundle.system_prompt
+
+
+def test_prompt_composer_includes_commonwealth_speaking_style_rules() -> None:
+    """Confirm Maya's spoken style avoids strong regional caricature."""
+    character = CharacterEngine().create_maya()
+
+    bundle = PromptComposer().compose(character)
+
+    assert "Use broadly international English pronunciation." in bundle.system_prompt
+    assert "neutral Commonwealth cadence over an American cadence" in bundle.system_prompt
+    assert "never imitate either accent" in bundle.system_prompt
+    assert "Avoid distinctly American phrasing" in bundle.system_prompt
+    assert "relaxed, intelligent, lightly dry delivery" in bundle.system_prompt
+    assert "Do not mention or explain the accent unless asked." in bundle.system_prompt
+    assert "Melbourne/London-adjacent rhythm without caricature" in bundle.system_prompt
