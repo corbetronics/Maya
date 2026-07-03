@@ -4,6 +4,7 @@ from pathlib import Path
 
 from brain import (
     BANNED_PHRASES,
+    CharacterBibleLoader,
     CharacterEngine,
     ConstitutionLoader,
     ConversationDepth,
@@ -25,6 +26,37 @@ def test_prompt_composer_includes_constitution_text_verbatim(tmp_path: Path) -> 
     bundle = PromptComposer().compose(character)
 
     assert constitution_text in bundle.system_prompt
+
+
+def test_prompt_composer_includes_bounded_character_bible_background(tmp_path: Path) -> None:
+    """Confirm Maya gets a concise Character Bible summary without replacing the Constitution."""
+    constitution_text = "# Test Constitution\n\nKeep the behavioural rules.\n"
+    bible_text = "\n\n".join(
+        (
+            "# Maya Character Bible v2",
+            "Maya is 39 and lives in Manchester, England.",
+            "Maya speaks in British English.",
+            "PRIVATE_LONG_MARKER " * 200,
+        )
+    )
+    constitution_path = tmp_path / "constitution.md"
+    bible_path = tmp_path / "maya_character_bible_v2.md"
+    constitution_path.write_text(constitution_text, encoding="utf-8")
+    bible_path.write_text(bible_text, encoding="utf-8")
+    character = CharacterEngine(
+        constitution_loader=ConstitutionLoader(path=constitution_path),
+        character_bible_loader=CharacterBibleLoader(path=bible_path),
+    ).create_maya()
+
+    bundle = PromptComposer().compose(character)
+
+    assert "## Maya background" in bundle.system_prompt
+    assert "Maya is 39, British, and lives in Manchester, England." in bundle.system_prompt
+    assert "cyber threat intelligence" in bundle.system_prompt
+    assert "danced professionally for a long time" in bundle.system_prompt
+    assert "The Character Bible is factual and emotional background" in bundle.system_prompt
+    assert "## Constitution\n" + constitution_text in bundle.system_prompt
+    assert "PRIVATE_LONG_MARKER" not in bundle.system_prompt
 
 
 def test_prompt_composer_includes_banned_phrases_in_safety_rules() -> None:
@@ -76,19 +108,18 @@ def test_prompt_composer_includes_live_opening_behavior_rules() -> None:
     assert "unless directly asked" in bundle.system_prompt
 
 
-def test_prompt_composer_includes_commonwealth_speaking_style_rules() -> None:
-    """Confirm Maya's spoken style avoids strong regional caricature."""
+def test_prompt_composer_includes_british_speaking_style_rules() -> None:
+    """Confirm Maya's spoken style follows the Character Bible voice guidance."""
     character = CharacterEngine().create_maya()
 
     bundle = PromptComposer().compose(character)
 
-    assert "Use broadly international English pronunciation." in bundle.system_prompt
-    assert "neutral Commonwealth cadence over an American cadence" in bundle.system_prompt
-    assert "never imitate either accent" in bundle.system_prompt
-    assert "Avoid distinctly American phrasing" in bundle.system_prompt
-    assert "relaxed, intelligent, lightly dry delivery" in bundle.system_prompt
+    assert "Maya speaks in British English." in bundle.system_prompt
+    assert "neutral modern British accent" in bundle.system_prompt
+    assert "not American" in bundle.system_prompt
+    assert "warm intelligence and dry humour" in bundle.system_prompt
+    assert "American corporate phrasing" in bundle.system_prompt
     assert "Do not mention or explain the accent unless asked." in bundle.system_prompt
-    assert "Melbourne/London-adjacent rhythm without caricature" in bundle.system_prompt
 
 
 def test_prompt_composer_includes_conversational_interruption_rules() -> None:

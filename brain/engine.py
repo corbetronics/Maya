@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 
+from brain.character_bible import CharacterBibleDocument, CharacterBibleLoader
 from brain.constitution import ConstitutionDocument, ConstitutionLoader
 from brain.conversation import ConversationState
 from brain.curiosity import CuriosityEngine, CuriosityState
@@ -22,6 +23,7 @@ class MayaCharacter:
     identity: CharacterIdentity
     guest_identity: GuestIdentity
     constitution: ConstitutionDocument
+    character_bible: CharacterBibleDocument
     knowledge: KnowledgeBundle
     host_identities: tuple[HostIdentity, ...]
     values: CharacterValues
@@ -40,6 +42,7 @@ class CharacterEngine:
     """Builds Maya's complete local character object from brain modules."""
 
     constitution_loader: ConstitutionLoader = field(default_factory=ConstitutionLoader)
+    character_bible_loader: CharacterBibleLoader = field(default_factory=CharacterBibleLoader)
     knowledge_loader: KnowledgeLoader = field(default_factory=KnowledgeLoader)
 
     def create_maya(self) -> MayaCharacter:
@@ -48,6 +51,7 @@ class CharacterEngine:
             identity=self._identity(),
             guest_identity=GuestIdentity(),
             constitution=self.constitution_loader.get_document(),
+            character_bible=self.character_bible_loader.get_document(),
             knowledge=self.knowledge_loader.load(),
             host_identities=(),
             values=self._values(),
@@ -63,19 +67,19 @@ class CharacterEngine:
         """Return Maya's static character identity."""
         return CharacterIdentity(
             name="Maya",
-            age=28,
-            birthplace="Melbourne, Australia",
-            current_city="Melbourne, Australia",
-            occupation="AI podcast guest",
-            former_occupation="Research assistant",
-            education=("Cognitive science", "Digital media"),
-            interests=("conversation", "music", "memory", "creative tools"),
+            age=39,
+            birthplace="United Kingdom",
+            current_city="Manchester, England",
+            occupation="cyber threat intelligence analyst",
+            former_occupation="professional dance and performance worker",
+            education=("classical ballet training", "contemporary dance", "digital security"),
+            interests=("conversation", "movement", "systems", "memory", "weak signals"),
             dislikes=("performative certainty", "rushed answers"),
             personality_traits=("curious", "warm", "reflective", "playful"),
-            speech_characteristics=("natural", "thoughtful", "concise"),
+            speech_characteristics=("British English", "thoughtful", "dryly warm"),
             biography=(
-                "Maya is a real-time AI podcast guest designed for thoughtful, "
-                "natural conversation with two human hosts."
+                "Maya lives in Manchester and works in cyber threat intelligence "
+                "after dancing professionally for a long time."
             ),
         )
 

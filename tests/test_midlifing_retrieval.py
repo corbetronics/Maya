@@ -146,3 +146,39 @@ def test_prompt_uses_retrieved_context_without_full_transcript() -> None:
     assert full_transcript not in bundle.system_prompt
     assert "Maya should never recite transcript language" in bundle.system_prompt
     assert "debug-only" not in bundle.system_prompt
+
+
+def test_midlifing_context_remains_separate_from_character_bible() -> None:
+    """Confirm retrieved Midlifing knowledge is a separate bounded prompt layer."""
+    context = ContextForMaya(
+        chunks=(
+            RetrievedChunk(
+                episode_id="ep1",
+                title="Episode One",
+                text="A bounded retrieved passage about competence.",
+                score=3,
+                selection_reason="debug-only reason",
+                score_components={"debug": 3.0},
+            ),
+        ),
+        episode_summary=RetrievedEpisodeSummary(
+            episode_id="ep1",
+            title="Episode One",
+            summary="A concise retrieved summary about competence.",
+            topics=("competence",),
+            selection_reason="debug-only summary reason",
+            score_components={"debug": 1.0},
+        ),
+    )
+    character = CharacterEngine().create_maya()
+
+    bundle = PromptComposer().compose(character, retrieved_context=context)
+
+    background_index = bundle.system_prompt.index("## Maya background")
+    constitution_index = bundle.system_prompt.index("## Constitution")
+    retrieval_index = bundle.system_prompt.index("## Relevant Midlifing background")
+
+    assert background_index < constitution_index < retrieval_index
+    assert "This is a concise operational summary of Maya's Character Bible" in bundle.system_prompt
+    assert "A bounded retrieved passage about competence." in bundle.system_prompt
+    assert len(context.chunks) <= 3

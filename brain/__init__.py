@@ -1,5 +1,6 @@
 """Conversation brain package for Project MAYA."""
 
+from brain.character_bible import CharacterBibleDocument, CharacterBibleLoader
 from brain.constitution import ConstitutionDocument, ConstitutionLoader
 from brain.conversation import ConversationDepth, ConversationState
 from brain.curiosity import CuriosityDecision, CuriosityEngine, CuriosityState
@@ -26,6 +27,8 @@ __all__ = [
     "BrainOutput",
     "BANNED_PHRASES",
     "CharacterEngine",
+    "CharacterBibleDocument",
+    "CharacterBibleLoader",
     "CharacterIdentity",
     "CharacterValues",
     "ConstitutionDocument",

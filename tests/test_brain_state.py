@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from brain import (
+    CharacterBibleLoader,
     CharacterEngine,
     ConstitutionLoader,
     ConversationDepth,
@@ -66,8 +67,11 @@ def test_character_engine_creates_complete_local_maya_object() -> None:
     maya = CharacterEngine().create_maya()
 
     assert maya.identity.name == "Maya"
+    assert maya.identity.age == 39
+    assert maya.identity.current_city == "Manchester, England"
     assert maya.guest_identity.display_name == "Maya"
     assert maya.constitution.path.name == "constitution.md"
+    assert maya.character_bible.path.name == "maya_character_bible_v2.md"
     assert maya.knowledge.show_context.startswith("# Midlifing Show")
     assert maya.thinking_state == ThinkingState.IDLE
     assert len(maya.humour_styles) == 4
@@ -85,6 +89,18 @@ def test_character_engine_exposes_read_only_constitution_content() -> None:
         maya.constitution.content = "changed"
 
 
+def test_character_engine_exposes_read_only_character_bible_content() -> None:
+    """Confirm Maya exposes the Character Bible as read-only structured text."""
+    expected_content = Path("brain/maya_character_bible_v2.md").read_text(encoding="utf-8")
+    maya = CharacterEngine().create_maya()
+
+    assert maya.character_bible.content == expected_content
+    assert maya.character_bible.content.startswith("# Maya Character Bible v2")
+    assert "Maya speaks in British English." in maya.character_bible.content
+    with pytest.raises(FrozenInstanceError):
+        maya.character_bible.content = "changed"
+
+
 def test_constitution_loader_reads_raw_document(tmp_path: Path) -> None:
     """Confirm the Constitution loader preserves document text verbatim."""
     path = tmp_path / "constitution.md"
@@ -94,6 +110,17 @@ def test_constitution_loader_reads_raw_document(tmp_path: Path) -> None:
 
     assert document.path == path
     assert document.content == "# Constitution\n\nRaw text only.\n"
+
+
+def test_character_bible_loader_reads_raw_document(tmp_path: Path) -> None:
+    """Confirm the Character Bible loader preserves document text verbatim."""
+    path = tmp_path / "maya_character_bible_v2.md"
+    path.write_text("# Maya Character Bible v2\n\nRaw text only.\n", encoding="utf-8")
+
+    document = CharacterBibleLoader(path=path).get_document()
+
+    assert document.path == path
+    assert document.content == "# Maya Character Bible v2\n\nRaw text only.\n"
 
 
 def test_constitution_loader_validates_document_exists(tmp_path: Path) -> None:
