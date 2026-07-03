@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from brain.conversation import ConversationState
 from brain.engine import MayaCharacter
 from brain.memory import WorkingMemory
+from brain.midlifing_retrieval import ContextForMaya
 from brain.models import ConversationTurn
 
 
@@ -34,6 +35,7 @@ class PromptComposer:
         character: MayaCharacter,
         conversation_state: ConversationState | None = None,
         working_memory: WorkingMemory | None = None,
+        retrieved_context: ContextForMaya | None = None,
     ) -> PromptBundle:
         """Compose a prompt bundle without making network or model calls."""
         active_conversation_state = conversation_state or character.conversation_state
@@ -46,6 +48,7 @@ class PromptComposer:
             developer_notes=developer_notes,
             memory_context=memory_context,
             safety_rules=safety_rules,
+            retrieved_context=retrieved_context,
         )
 
         return PromptBundle(
@@ -61,6 +64,7 @@ class PromptComposer:
         developer_notes: str,
         memory_context: str,
         safety_rules: str,
+        retrieved_context: ContextForMaya | None,
     ) -> str:
         """Render the full system prompt with raw Constitution text included verbatim."""
         return "\n\n".join(
@@ -70,6 +74,8 @@ class PromptComposer:
                 "## Speaking Style\n" + self._speaking_style_rules(),
                 "## Constitution\n" + character.constitution.content,
                 "## Background for this conversation\n" + self._background_context(character),
+                "## Relevant Midlifing background — use only if natural. Do not quote or claim exact recall unless the wording is supported.\n"
+                + self._retrieved_midlifing_context(retrieved_context),
                 "## Opening Behavior\n" + self._opening_behavior_rules(),
                 "## Interruption Behavior\n" + self._interruption_behavior_rules(),
                 "## Current Conversation\n" + developer_notes,
@@ -156,6 +162,35 @@ class PromptComposer:
                 ),
             )
         )
+
+    def _retrieved_midlifing_context(self, context: ContextForMaya | None) -> str:
+        """Render concise retrieved Midlifing context without full transcripts."""
+        rules = "\n".join(
+            (
+                "Maya must not say she has listened to every episode.",
+                "Maya should say 'I remember you talking about...' only when supported by retrieved material.",
+                "Maya should never recite transcript language or reveal internal notes.",
+            )
+        )
+        if context is None or (not context.chunks and context.episode_summary is None):
+            return rules + "\nNo retrieved Midlifing context for this turn."
+
+        sections = [rules]
+        if context.episode_summary:
+            sections.append(
+                "\n".join(
+                    (
+                        "Episode summary:",
+                        f"- {context.episode_summary.title}: {context.episode_summary.summary}",
+                    )
+                )
+            )
+        if context.chunks:
+            chunk_lines = ["Relevant chunks:"]
+            for chunk in context.chunks:
+                chunk_lines.append(f"- {chunk.title}: {chunk.text}")
+            sections.append("\n".join(chunk_lines))
+        return "\n\n".join(sections)
 
     def _safety_rules(self) -> str:
         """Render fixed safety rules and banned phrases."""

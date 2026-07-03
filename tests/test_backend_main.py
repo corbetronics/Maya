@@ -115,6 +115,24 @@ def test_maya_ephemeral_session_openai_http_error_returns_safe_502(monkeypatch) 
     }
 
 
+def test_maya_knowledge_status_reports_counts() -> None:
+    """Confirm producer-ready knowledge status reports artifact counts only."""
+    client = TestClient(create_app())
+
+    response = client.get("/maya/knowledge-status")
+
+    assert response.status_code == 200
+    assert set(response.json()) == {
+        "knowledge_loaded",
+        "indexed_episodes",
+        "summaries",
+        "retrieval_chunks",
+        "source",
+    }
+    assert isinstance(response.json()["knowledge_loaded"], bool)
+    assert response.json()["source"] in {"runtime_index", "none"}
+
+
 def test_frontend_catch_all_serves_index_for_non_api_paths(tmp_path: Path) -> None:
     """Confirm production frontend routing serves React for application paths."""
     index_path = tmp_path / "index.html"

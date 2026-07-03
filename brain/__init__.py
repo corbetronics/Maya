@@ -9,6 +9,12 @@ from brain.humour import HUMOUR_STYLE_BY_NAME, HUMOUR_STYLES, HumourStyle
 from brain.identity import CharacterIdentity, GuestIdentity, HostIdentity
 from brain.knowledge_loader import KnowledgeBundle, KnowledgeLoader
 from brain.memory import MemoryRecord, WorkingMemory
+from brain.midlifing_retrieval import (
+    ContextForMaya,
+    MidlifingKnowledgeRetriever,
+    RetrievedChunk,
+    RetrievedEpisodeSummary,
+)
 from brain.models import BrainInput, BrainOutput, ConversationTurn, SpeakerRole
 from brain.prompt_composer import BANNED_PHRASES, PromptBundle, PromptComposer
 from brain.reflection import ReflectionNote, ThinkingState
@@ -28,6 +34,7 @@ __all__ = [
     "ConversationEmotion",
     "ConversationState",
     "ConversationTurn",
+    "ContextForMaya",
     "CuriosityDecision",
     "CuriosityEngine",
     "CuriosityState",
@@ -40,9 +47,12 @@ __all__ = [
     "KnowledgeLoader",
     "MayaCharacter",
     "MemoryRecord",
+    "MidlifingKnowledgeRetriever",
     "PromptBundle",
     "PromptComposer",
     "ReflectionNote",
+    "RetrievedChunk",
+    "RetrievedEpisodeSummary",
     "SpeakerRole",
     "ThinkingState",
     "WeightedValue",

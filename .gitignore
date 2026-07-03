@@ -1,7 +1,9 @@
 .DS_Store
+.env.local
 .env
 .venv/
 .tools/
+.cache/
 __pycache__/
 *.py[cod]
 *.sqlite3
@@ -11,3 +13,13 @@ node_modules/
 .pnpm-store/
 dist/
 coverage/
+brain/knowledge/midlifing/audio/
+brain/knowledge/midlifing/transcripts/*
+!brain/knowledge/midlifing/transcripts/.gitkeep
+brain/knowledge/midlifing/summaries/*
+!brain/knowledge/midlifing/summaries/.gitkeep
+brain/knowledge/midlifing/chunks/*
+!brain/knowledge/midlifing/chunks/.gitkeep
+brain/knowledge/midlifing/index.json
+brain/knowledge/midlifing/runtime_index.json
+brain/knowledge/midlifing/downloads/
