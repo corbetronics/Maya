@@ -91,7 +91,7 @@ python scripts/export_midlifing_runtime_index.py
 ```
 
 This writes `brain/knowledge/midlifing/runtime_index.json`, which is ignored by Git.
-Upload that file to private persistent storage for deployment, for example a private
+Keep that file in private persistent storage for deployment, for example the private
 Render disk at `/var/data/maya/runtime_index.json`, or set `MAYA_KNOWLEDGE_INDEX_PATH`
 to another private path. Do not commit raw audio, full transcripts, or the runtime
 index to the repository.
@@ -108,30 +108,11 @@ Render deploys Project Maya as a single Docker web service from `render.yaml`. T
 2. In Render, create a new Blueprint and select this repository's `render.yaml`.
 3. Add `OPENAI_API_KEY` as a Render environment variable. Do not commit it to the repository.
 4. Add `OPENAI_SAFETY_IDENTIFIER` as a stable, privacy-preserving Render environment variable.
-5. Upload `runtime_index.json` to a private Render disk at `/var/data/maya/runtime_index.json`, or set `MAYA_KNOWLEDGE_INDEX_PATH` to its private location.
+5. Ensure `runtime_index.json` is present on the private Render disk at `/var/data/maya/runtime_index.json`, or set `MAYA_KNOWLEDGE_INDEX_PATH` to its private location. The index is already installed on the Render persistent disk for the current deployment.
 6. Deploy the Blueprint.
 7. Open the Render URL and allow microphone access when the browser asks.
 
 If no runtime index is present, Maya still starts and the backend logs a warning; live Midlifing retrieval simply returns no background context.
-
-### One-Time Runtime Index Upload
-
-For a private one-use upload to a running backend, set an admin token in Render:
-
-```bash
-MAYA_ADMIN_UPLOAD_TOKEN="a-long-random-one-time-token"
-```
-
-Then upload the local derived runtime index:
-
-```bash
-curl -X POST "https://YOUR-RENDER-SERVICE.onrender.com/maya/admin/upload-runtime-index" \
-  -H "X-Maya-Admin-Token: $MAYA_ADMIN_UPLOAD_TOKEN" \
-  -H "Content-Type: application/json" \
-  --data-binary @brain/knowledge/midlifing/runtime_index.json
-```
-
-The backend accepts one JSON runtime index up to 2 MB, validates that it contains no raw transcript paths, audio paths, transcript fields, or debug score fields, writes it atomically to `/var/data/maya/runtime_index.json`, and reloads retrieval immediately. Remove or rotate `MAYA_ADMIN_UPLOAD_TOKEN` after the upload.
 
 Render sets `ENVIRONMENT=production` in `render.yaml`. Local development can configure CORS with `CORS_ORIGINS`, for example:
 
